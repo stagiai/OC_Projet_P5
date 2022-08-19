@@ -11,11 +11,17 @@ function itemsDisplay(){
             let section = document.getElementById("items");
             let i = 0;
             while (i < data.length) {
+
+            /*-- création de la balise ancre a ----------------------------*/
                 let a = document.createElement('a');
                 a.setAttribute('href', "./product.html?id="+data[i]['_id']);                                
-                section.appendChild(a);                
+                section.appendChild(a);
+
+            /*-- création de l'élément 'article de la balise a --------------*/
                 let article = document.createElement('article');
-                a.appendChild(article);        
+                a.appendChild(article);
+                
+            /*-- création des éléments children img, h3 et p de l'élément article --*/
                 let img = document.createElement("img");
                 img.setAttribute('src', data[i]['imageUrl']);
                 img.setAttribute('alt',data[i]['altTxt']);
