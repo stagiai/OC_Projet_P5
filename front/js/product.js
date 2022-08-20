@@ -34,24 +34,42 @@ function itemDisplay(){
 itemDisplay();
 
 document.getElementById('addToCart').addEventListener('click', () => {
-    addToCart()
-});  
+    addToCart()});  
 
 function addToCart() {   
-        productColor = getItemColor();
-        if (productColor == "") { alert('Veuillez choisir une couleur');};
-        productQuantity = getItemQuantity();
-        if (productQuantity == 0 || productQuantity > 100) {alert('Veuillez choisir une quantité comprise entre 1 et 100')};
-        const newItem = {
-            id : productId,
-            color : productColor,
-            quantity : productQuantity,
-        }
-        let existingItems = JSON.parse(localStorage.getItem('allItems'));
-        if( existingItems == null) {existingItems = [];}
+    productColor = getItemColor();
+    productQuantity = getItemQuantity();
+    let newItem = {
+        id : productId,
+        color : productColor,
+        quantity : productQuantity};
+
+    if (localStorage.getItem('AllItems') == null) {
+        var existingItems = [];}
+    else {
+        existingItems = JSON.parse(localStorage.getItem('AllItems'));}
+
+    let detect = false
+
+    if (existingItems.length == 0) {
         existingItems.push(newItem);
-        console.log(existingItems);
-        localStorage.setItem ('allItems', JSON.stringify(existingItems));
+        detect = true;
+    }
+    else {
+        for (let i = 0; i < existingItems.length; i++) {
+            if (existingItems[i].id == productId && existingItems[i].color == productColor) {
+                let quantity = Number(existingItems[i].quantity);
+                quantity += Number(productQuantity);
+                existingItems[i].quantity = String(quantity);
+                detect = true;
+            }
+        }
+    }
+    if (detect == false) {
+        existingItems.push(newItem);}
+
+
+    localStorage.setItem('AllItems', JSON.stringify(existingItems));
 }
 
 function getItemColor() {
@@ -60,7 +78,7 @@ function getItemColor() {
 }
 
 function getItemQuantity() {
-    var quantity = document.getElementById ('quantity');
+    var quantity = document.getElementById('quantity');
     return quantity.value;
 }
 
