@@ -44,32 +44,34 @@ function addToCart() {
         color : productColor,
         quantity : productQuantity};
 
-    if (localStorage.getItem('AllItems') == null) {
-        var existingItems = [];}
-    else {
-        existingItems = JSON.parse(localStorage.getItem('AllItems'));}
-
-    let detect = false
-
-    if (existingItems.length == 0) {
-        existingItems.push(newItem);
-        detect = true;
-    }
-    else {
-        for (let i = 0; i < existingItems.length; i++) {
-            if (existingItems[i].id == productId && existingItems[i].color == productColor) {
-                let quantity = Number(existingItems[i].quantity);
-                quantity += Number(productQuantity);
-                existingItems[i].quantity = String(quantity);
-                detect = true;
+    if (productColor != "" && productQuantity != 0) {
+        if (localStorage.getItem('AllItems') == null) {
+            var existingItems = [];}
+        else {
+            existingItems = JSON.parse(localStorage.getItem('AllItems'));}
+    
+        let detect = false
+    
+        if (existingItems.length == 0) {
+            existingItems.push(newItem);
+            detect = true;
+        }
+        else {
+            for (let i = 0; i < existingItems.length; i++) {
+                if (existingItems[i].id == productId && existingItems[i].color == productColor) {
+                    let quantity = Number(existingItems[i].quantity);
+                    quantity += Number(productQuantity);
+                    existingItems[i].quantity = String(quantity);
+                    detect = true;
+                }
             }
         }
-    }
-    if (detect == false) {
-        existingItems.push(newItem);}
-
-
-    localStorage.setItem('AllItems', JSON.stringify(existingItems));
+        if (detect == false) {
+            existingItems.push(newItem);}
+    
+    
+        localStorage.setItem('AllItems', JSON.stringify(existingItems));
+    }        
 }
 
 function getItemColor() {
