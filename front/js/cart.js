@@ -1,20 +1,123 @@
-let object = JSON.parse(localStorage.getItem("AllItems"));
+var object = JSON.parse(window.localStorage.getItem("AllItems"));
 console.log(object.length);
 
 var totalPrice = 0;
 var totalQuantity = 0;
+var section = document.getElementById('cart__items');
+cartDisplay(object);
 
-for (let i = 0; i < object.length; i++) {
-    let section = document.getElementById('cart__items');
-    let article = document.createElement('article');
-    article.classList.add('cart__item');
-    article.setAttribute('data-id', object[i].id);
-    article.setAttribute('data-color', object[i].color);
-    section.appendChild(article);
-    cartDisplay(object[i].id, object[i].color, object[i].quantity, article);
+let trash = document.getElementsByClassName("deleteItem");
+console.log(trash);
+trash.forEach((element) => {element.addEventListener('click',() =>{
+    el = element.closest('cart__item');
+    let removeItemId = el.getAttribute('data-Id');
+    let removeItemColor = el.getAttribute('data-color');
+    removeItem(removeItemId, removeItemColor)
+})});
+
+
+function removeItem (id, color) {
+    let array = [];
+    let localStorageItems = JSON.parse(window.localStorage.getItem("AllItems"));;
+    for (let i =0; i < localStorageItems.length; i++) {
+        if (localStorageItems[i].id == id && localStorageItems[i].color == color) {
+            if (i == 0) {
+                array = localStorageItems.shift();
+            }
+            else {
+            array = localStorageItems.splice(i-1, 1);
+            }
+        }
+    }
+    localStorage.setItem('AllItems', JSON.stringify(array));
+    console.log(object.length);
+    cartDisplay(array);
 }
 
-async function cartDisplay(id, color, quantity, article) {
+
+let inputs = section.getElementsByClassName('itemQuantity');
+console.log(inputs);
+
+
+
+const reg = /\d/;
+let firstName = document.getElementById('firstName');
+firstName.addEventListener('change', () => {
+    alert(firstName.value);
+    console.log(firstName.value);
+    console.log(firstName.value.search(reg));
+    if (firstName.value.search(reg) > -1) {
+        document.querySelector('#firstNameErrorMsg').innerHTML = "Le prénom ne doit pas contenir de chiffres";
+    }
+    else {
+        document.querySelector('#firstNameErrorMsg').innerHTML = "";
+    };
+});
+
+let lastName = document.getElementById('lastName');
+lastName.addEventListener('change', () => {
+    alert(lastName.value);
+    console.log(lastName.value.search(reg));
+    if (lastName.value.search(reg) > -1) {
+        document.querySelector('#lastNameErrorMsg').innerHTML = "Le nom ne doit pas contenir de chiffres";
+    }
+    else {
+        document.querySelector('#lastNameErrorMsg').innerHTML = "";
+    };
+});
+
+let email = document.getElementById('email');
+email.addEventListener('change', () => {
+    alert(email.value);
+    if (email.value.indexOf('@') == -1) {
+        document.getElementById('emailErrorMsg').innerHTML = "Veuillez renter un email correct";
+    }});
+
+let order = document.getElementById('order');
+order.addEventListener('click', ()=>{
+    var object = JSON.parse(window.localStorage.getItem("AllItems"));
+    let productsId = [];
+    for (let i = 0; i < object.length; i++) {
+        productsId.push(object[i].id);
+        alert(productsId[i]);
+    };
+    console.log(productsId.length);
+    send(productsId);
+
+});
+
+function send(productsId){
+    fetch("http://localhost:3000/api/products",{
+        method: 'POST',
+        headers: {
+            'Accept' : 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body : JSON.stringify({
+            clientFirstName : document.getElementById('firstName').value,
+            products : productsId
+        })
+    })
+        .then(function(res) {
+            if (res.ok) {
+            return res.json();}
+            else {console.log('error')}})
+        .then(data => {console.log(data)})
+        .catch(err => {console.log('error')})
+};
+
+
+
+
+async function cartDisplay (array) {
+    if (object.length > 0) {
+        for (let i = 0; i < array.length; i++) {
+            await itemDisplay(array[i].id, array[i].color, array[i].quantity, section);
+        }
+    }
+}
+
+async function itemDisplay(id, color, quantity, section) {
     let data = [];
     try {
         data = await getItem(id);
@@ -23,6 +126,11 @@ async function cartDisplay(id, color, quantity, article) {
         console.log('Erreur')
     }
     console.log(data);
+    let article = document.createElement('article');
+    article.classList.add('cart__item');
+    article.setAttribute('data-id', id);
+    article.setAttribute('data-color', color);
+    section.appendChild(article);
     let div1 = document.createElement('div');
     div1.classList.add('cart__item__img');
     article.appendChild(div1);
@@ -62,6 +170,7 @@ async function cartDisplay(id, color, quantity, article) {
     input.setAttribute('min', '1');
     input.setAttribute('max', '100');
     input.setAttribute('value', quantity);
+
     div4.appendChild(input);
     let div6 = document.createElement('div');
     div6.classList.add('cart__item__content__settings__delete');
@@ -75,6 +184,7 @@ async function cartDisplay(id, color, quantity, article) {
     totalPrice += Number(quantity)*Number(data['price']);
     document.getElementById("totalPrice").textContent = totalPrice;
 }
+
 
 async function getItem(id) {
     const itemPromise = await fetch("http://localhost:3000/api/products/"+id);
