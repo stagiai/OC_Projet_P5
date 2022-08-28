@@ -1,118 +1,21 @@
-var object = JSON.parse(window.localStorage.getItem("AllItems"));
-console.log(object.length);
-
-var totalPrice = 0;
-var totalQuantity = 0;
-var section = document.getElementById('cart__items');
-cartDisplay(object);
-
-let trash = document.getElementsByClassName("deleteItem");
-console.log(trash);
-trash.forEach((element) => {element.addEventListener('click',() =>{
-    el = element.closest('cart__item');
-    let removeItemId = el.getAttribute('data-Id');
-    let removeItemColor = el.getAttribute('data-color');
-    removeItem(removeItemId, removeItemColor)
-})});
+//var object = JSON.parse(window.localStorage.getItem("AllItems"));
+//console.log(object.length);
 
 
-function removeItem (id, color) {
-    let array = [];
-    let localStorageItems = JSON.parse(window.localStorage.getItem("AllItems"));;
-    for (let i =0; i < localStorageItems.length; i++) {
-        if (localStorageItems[i].id == id && localStorageItems[i].color == color) {
-            if (i == 0) {
-                array = localStorageItems.shift();
-            }
-            else {
-            array = localStorageItems.splice(i-1, 1);
-            }
-        }
-    }
-    localStorage.setItem('AllItems', JSON.stringify(array));
-    console.log(object.length);
-    cartDisplay(array);
-}
+//var section = document.getElementById('cart__items');
 
+//------------------ Affichage initial du panier ----------------------------------------
+cartDisplay();
+cartTotalPriceAndQuantity();
 
-let inputs = section.getElementsByClassName('itemQuantity');
-console.log(inputs);
-
-
-
-const reg = /\d/;
-let firstName = document.getElementById('firstName');
-firstName.addEventListener('change', () => {
-    alert(firstName.value);
-    console.log(firstName.value);
-    console.log(firstName.value.search(reg));
-    if (firstName.value.search(reg) > -1) {
-        document.querySelector('#firstNameErrorMsg').innerHTML = "Le prénom ne doit pas contenir de chiffres";
-    }
-    else {
-        document.querySelector('#firstNameErrorMsg').innerHTML = "";
-    };
-});
-
-let lastName = document.getElementById('lastName');
-lastName.addEventListener('change', () => {
-    alert(lastName.value);
-    console.log(lastName.value.search(reg));
-    if (lastName.value.search(reg) > -1) {
-        document.querySelector('#lastNameErrorMsg').innerHTML = "Le nom ne doit pas contenir de chiffres";
-    }
-    else {
-        document.querySelector('#lastNameErrorMsg').innerHTML = "";
-    };
-});
-
-let email = document.getElementById('email');
-email.addEventListener('change', () => {
-    alert(email.value);
-    if (email.value.indexOf('@') == -1) {
-        document.getElementById('emailErrorMsg').innerHTML = "Veuillez renter un email correct";
-    }});
-
-let order = document.getElementById('order');
-order.addEventListener('click', ()=>{
-    var object = JSON.parse(window.localStorage.getItem("AllItems"));
-    let productsId = [];
-    for (let i = 0; i < object.length; i++) {
-        productsId.push(object[i].id);
-        alert(productsId[i]);
-    };
-    console.log(productsId.length);
-    send(productsId);
-
-});
-
-function send(productsId){
-    fetch("http://localhost:3000/api/products",{
-        method: 'POST',
-        headers: {
-            'Accept' : 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body : JSON.stringify({
-            clientFirstName : document.getElementById('firstName').value,
-            products : productsId
-        })
-    })
-        .then(function(res) {
-            if (res.ok) {
-            return res.json();}
-            else {console.log('error')}})
-        .then(data => {console.log(data)})
-        .catch(err => {console.log('error')})
-};
-
-
-
-
-async function cartDisplay (array) {
-    if (object.length > 0) {
+async function cartDisplay () {
+//    var array = JSON.parse(window.localStorage.getItem("AllItems"));
+    var array = await getItemsFromLocalStorage()
+    console.log(array.length);
+    var section = document.getElementById('cart__items');
+    if (array.length > 0) {
         for (let i = 0; i < array.length; i++) {
-            await itemDisplay(array[i].id, array[i].color, array[i].quantity, section);
+            itemDisplay(array[i].id, array[i].color, array[i].quantity, section);
         }
     }
 }
@@ -120,12 +23,11 @@ async function cartDisplay (array) {
 async function itemDisplay(id, color, quantity, section) {
     let data = [];
     try {
-        data = await getItem(id);
+        data = await getItemFromAPI(id);
     }
-    catch (e) {
-        console.log('Erreur')
+    catch (err) {
+        console.log(err)
     }
-    console.log(data);
     let article = document.createElement('article');
     article.classList.add('cart__item');
     article.setAttribute('data-id', id);
@@ -170,7 +72,6 @@ async function itemDisplay(id, color, quantity, section) {
     input.setAttribute('min', '1');
     input.setAttribute('max', '100');
     input.setAttribute('value', quantity);
-
     div4.appendChild(input);
     let div6 = document.createElement('div');
     div6.classList.add('cart__item__content__settings__delete');
@@ -179,19 +80,202 @@ async function itemDisplay(id, color, quantity, section) {
     p4.classList.add('deleteItem');
     p4.textContent = 'Supprimer';
     div6.appendChild(p4);
-    totalQuantity += Number(quantity); 
-    document.getElementById("totalQuantity").textContent = totalQuantity;
-    totalPrice += Number(quantity)*Number(data['price']);
-    document.getElementById("totalPrice").textContent = totalPrice;
 }
 
 
-async function getItem(id) {
+async function getItemFromAPI(id) {
     const itemPromise = await fetch("http://localhost:3000/api/products/"+id);
     const response = await itemPromise.json();
     console.log(response);
     return response;
 }
+
+async function getItemsFromLocalStorage() {
+    var array = JSON.parse(window.localStorage.getItem("AllItems"));
+    return array;
+}
+
+async function cartTotalPriceAndQuantity () {
+    var array = await getItemsFromLocalStorage();
+    var totalPrice = 0;
+    var totalQuantity = 0;
+    console.log('hello');
+    if (array.length > 0) {
+        for (let i = 0; i < array.length; i++) {
+            console.log(Number(array[i].quantity));
+            totalQuantity += Number(array[i].quantity); 
+            document.getElementById("totalQuantity").textContent = totalQuantity;
+            try {
+                data = await getItemFromAPI(array[i].id);
+                console.log(data.price);
+                totalPrice += Number(array[i].quantity)*Number(data.price);
+                document.getElementById("totalPrice").textContent = totalPrice;
+            }
+            catch (err) {
+                console.log(err)
+            }
+        }
+    }
+}
+
+//------------------  Fin de l'affichage intial du panier -------------------------------
+
+
+//------------------ Suppression des articles --------------------------------------------
+
+let trash = document.getElementsByClassName('deleteItem');
+setTimeout(() => {
+    console.log(trash);
+    let array = Array.from(trash);
+    console.log(array);
+    array.forEach((element) => element.addEventListener('click',() =>{
+        console.log(element);
+        el = element.closest("article");
+        console.log(el);
+        let removeItemId = el.getAttribute('data-Id');
+        console.log(removeItemId);
+        let removeItemColor = el.getAttribute('data-color');
+        console.log(removeItemColor);
+        el.remove();
+        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
+        for (let i =0; i < itemsUpdate.length; i++) {
+            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
+                itemsUpdate.splice(i, 1);
+                }
+            }
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate));
+        console.log(itemsUpdate.length);
+        console.log(itemsUpdate);
+//        cartDisplay();
+        cartTotalPriceAndQuantity();
+    }));
+},100);
+
+//-----------------------Fin de la suppression des articles---------------------------------------------
+
+
+//-----------------------Modification de la quantité d'un article au niveau du panier ------------------
+
+let inputs = document.getElementsByClassName('itemQuantity');
+setTimeout(() => {
+    console.log(inputs);
+    let array = Array.from(inputs);
+    console.log(array);
+    array.forEach((element) => element.addEventListener('change',() =>{
+        console.log(element);
+        el = element.closest("article");
+        console.log(el);
+        let removeItemId = el.getAttribute('data-Id');
+        console.log(removeItemId);
+        let removeItemColor = el.getAttribute('data-color');
+        console.log(removeItemColor);
+        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
+        for (let i =0; i < itemsUpdate.length; i++) {
+            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
+                itemsUpdate[i].quantity = element.value;
+                }
+            }
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate));
+        console.log(itemsUpdate.length);
+        console.log(itemsUpdate);
+//        cartDisplay();
+        cartTotalPriceAndQuantity();
+    }));
+},100);
+
+
+// ---------------------------- Fin de la modification de la quantité d'un article au niveau du panier  -------------------------
+
+
+
+
+
+
+
+
+//-----------------------Contrôle des inputs contact du Client----------------------------------------
+
+const reg = /\d/;
+let firstName = document.getElementById('firstName');
+firstName.addEventListener('change', () => {
+    if (firstName.value.search(reg) > -1) {
+        document.querySelector('#firstNameErrorMsg').innerHTML = "Le prénom ne doit pas contenir de chiffres";
+    }
+    else {
+        document.querySelector('#firstNameErrorMsg').innerHTML = "";
+    };
+});
+
+let lastName = document.getElementById('lastName');
+lastName.addEventListener('change', () => {
+    if (lastName.value.search(reg) > -1) {
+        document.querySelector('#lastNameErrorMsg').innerHTML = "Le nom ne doit pas contenir de chiffres";
+    }
+    else {
+        document.querySelector('#lastNameErrorMsg').innerHTML = "";
+    };
+});
+
+let email = document.getElementById('email');
+email.addEventListener('change', () => {
+    alert(email.value);
+    if (email.value.indexOf('@') == -1) {
+        document.getElementById('emailErrorMsg').innerHTML = "Veuillez renter un email correct";
+    }});
+
+//--------------------------Fin du contrôle des inputs contact du Client---------------------------------
+
+//--------------------------Passation de commande --------------------------------------------------
+
+let order = document.getElementById('order');
+var productsId = [];
+order.addEventListener('click', (event)=>{
+    event.preventDefault();
+    var object = JSON.parse(window.localStorage.getItem("AllItems"));
+    console.log(object);
+
+    for (let i = 0; i < object.length; i++) {
+        console.log(object[i].id);
+        productsId.push(object[i].id);
+        alert(productsId[i]);
+    };
+    console.log(productsId);
+    send(productsId);
+});
+
+
+function send(productsId){
+    fetch("http://localhost:3000/api/products/order/",{
+        method: 'POST',
+        headers: {
+            'Accept' : 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body : JSON.stringify({
+            contact: {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                email: document.getElementById('email').value
+            },
+            products: productsId,
+        })
+    })
+        .then(function(res) {
+            if (res.ok) {
+            return res.json();}
+            else {console.log('error')}})
+        .then(data => {console.log(data)})
+        .catch(err => {console.log(err)})
+};
+
+//---------------------------  Fin de passation de commande  -------------------------------------
+
+
+
+
+
 
 
 

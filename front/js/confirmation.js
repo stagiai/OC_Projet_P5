@@ -1,4 +1,4 @@
-fetch("http://localhost:3000/api/products/orderId")
+fetch("http://localhost:3000/api/products")
   .then(function(res) {
     if (res.ok) {
       return res.json();
@@ -8,7 +8,7 @@ fetch("http://localhost:3000/api/products/orderId")
     console.log(value);
   })
   .catch(err => {
-    console.log('error')
+    console.log(err)
   });
 
-document.getElementById('orderId').innerHTML=orderId;
+document.getElementById('orderId').textContent=value;
