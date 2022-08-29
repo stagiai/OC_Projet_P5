@@ -116,6 +116,10 @@ async function cartTotalPriceAndQuantity () {
             }
         }
     }
+    else {
+        document.getElementById("totalQuantity").textContent = 0;
+        document.getElementById("totalPrice").textContent = 0;
+    }
 }
 
 //------------------  Fin de l'affichage intial du panier -------------------------------
@@ -244,6 +248,7 @@ order.addEventListener('click', (event)=>{
 });
 
 
+
 function send(productsId){
     fetch("http://localhost:3000/api/products/order/",{
         method: 'POST',
@@ -266,7 +271,10 @@ function send(productsId){
             if (res.ok) {
             return res.json();}
             else {console.log('error')}})
-        .then(data => {console.log(data)})
+        .then(data => {
+            console.log(data);
+            window.location.replace ("C:/Users/mabdu/Documents/OC/P5_Aabdul_Malik/P5-Dev-Web-Kanap/front/html/confirmation.html?id="+data.orderId);
+        })
         .catch(err => {console.log(err)})
 };
 
