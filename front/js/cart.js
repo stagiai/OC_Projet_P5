@@ -1,15 +1,8 @@
-//var object = JSON.parse(window.localStorage.getItem("AllItems"));
-//console.log(object.length);
-
-
-//var section = document.getElementById('cart__items');
-
-//------------------ Affichage initial du panier ----------------------------------------
+//------------------ Affichage du panier ----------------------------------------
 cartDisplay();
 cartTotalPriceAndQuantity();
 
 async function cartDisplay () {
-//    var array = JSON.parse(window.localStorage.getItem("AllItems"));
     var array = await getItemsFromLocalStorage()
     console.log(array.length);
     var section = document.getElementById('cart__items');
@@ -73,6 +66,24 @@ async function itemDisplay(id, color, quantity, section) {
     input.setAttribute('max', '100');
     input.setAttribute('value', quantity);
     div4.appendChild(input);
+    input.addEventListener('change',() =>{  // prise en compte des modifications de quantités à la page panier
+        el = input.closest("article");
+        console.log(el);
+        let removeItemId = el.getAttribute('data-Id');
+        console.log(removeItemId);
+        let removeItemColor = el.getAttribute('data-color');
+        console.log(removeItemColor);
+        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
+        for (let i =0; i < itemsUpdate.length; i++) {
+            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
+                itemsUpdate[i].quantity = input.value;
+                }
+            }
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); // mise à jour du local storage, du nombre d'articles et du prix total
+        console.log(itemsUpdate.length);
+        console.log(itemsUpdate);
+        cartTotalPriceAndQuantity();
+    })
     let div6 = document.createElement('div');
     div6.classList.add('cart__item__content__settings__delete');
     div4.appendChild(div6);
@@ -80,6 +91,25 @@ async function itemDisplay(id, color, quantity, section) {
     p4.classList.add('deleteItem');
     p4.textContent = 'Supprimer';
     div6.appendChild(p4);
+    p4.addEventListener('click',() =>{  // prise en compte de la suppression des articles à la page panier
+        el = p4.closest("article");
+        console.log(el);
+        let removeItemId = el.getAttribute('data-Id');
+        console.log(removeItemId);
+        let removeItemColor = el.getAttribute('data-color');
+        console.log(removeItemColor);
+        el.remove();
+        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
+        for (let i =0; i < itemsUpdate.length; i++) {
+            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
+                itemsUpdate.splice(i, 1);
+                }
+            }
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); // mise à jour du local storage, du nombre d'articles et du prix total
+        console.log(itemsUpdate.length);
+        console.log(itemsUpdate);
+        cartTotalPriceAndQuantity();
+    })
 }
 
 
@@ -125,85 +155,14 @@ async function cartTotalPriceAndQuantity () {
 //------------------  Fin de l'affichage intial du panier -------------------------------
 
 
-//------------------ Suppression des articles --------------------------------------------
 
-let trash = document.getElementsByClassName('deleteItem');
-setTimeout(() => {
-    console.log(trash);
-    let array = Array.from(trash);
-    console.log(array);
-    array.forEach((element) => element.addEventListener('click',() =>{
-        console.log(element);
-        el = element.closest("article");
-        console.log(el);
-        let removeItemId = el.getAttribute('data-Id');
-        console.log(removeItemId);
-        let removeItemColor = el.getAttribute('data-color');
-        console.log(removeItemColor);
-        el.remove();
-        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
-        for (let i =0; i < itemsUpdate.length; i++) {
-            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
-                itemsUpdate.splice(i, 1);
-                }
-            }
-        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate));
-        console.log(itemsUpdate.length);
-        console.log(itemsUpdate);
-//        cartDisplay();
-        cartTotalPriceAndQuantity();
-    }));
-},100);
+//-----------------------Contrôle des inputs du formulaire de la page panier----------------------------------------
 
-//-----------------------Fin de la suppression des articles---------------------------------------------
-
-
-//-----------------------Modification de la quantité d'un article au niveau du panier ------------------
-
-let inputs = document.getElementsByClassName('itemQuantity');
-setTimeout(() => {
-    console.log(inputs);
-    let array = Array.from(inputs);
-    console.log(array);
-    array.forEach((element) => element.addEventListener('change',() =>{
-        console.log(element);
-        el = element.closest("article");
-        console.log(el);
-        let removeItemId = el.getAttribute('data-Id');
-        console.log(removeItemId);
-        let removeItemColor = el.getAttribute('data-color');
-        console.log(removeItemColor);
-        let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
-        for (let i =0; i < itemsUpdate.length; i++) {
-            if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
-                itemsUpdate[i].quantity = element.value;
-                }
-            }
-        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate));
-        console.log(itemsUpdate.length);
-        console.log(itemsUpdate);
-//        cartDisplay();
-        cartTotalPriceAndQuantity();
-    }));
-},100);
-
-
-// ---------------------------- Fin de la modification de la quantité d'un article au niveau du panier  -------------------------
-
-
-
-
-
-
-
-
-//-----------------------Contrôle des inputs contact du Client----------------------------------------
-
-const reg = /\d/;
+const reg1 = /[0123456789&"'(_)=~#{[|\^@\]$*,;:!¤ù§/.?<>]/;
 let firstName = document.getElementById('firstName');
 firstName.addEventListener('change', () => {
-    if (firstName.value.search(reg) > -1) {
-        document.querySelector('#firstNameErrorMsg').innerHTML = "Le prénom ne doit pas contenir de chiffres";
+    if (firstName.value.search(reg1) > -1) {
+        document.querySelector('#firstNameErrorMsg').innerHTML = "prénom invalide";
     }
     else {
         document.querySelector('#firstNameErrorMsg').innerHTML = "";
@@ -212,22 +171,37 @@ firstName.addEventListener('change', () => {
 
 let lastName = document.getElementById('lastName');
 lastName.addEventListener('change', () => {
-    if (lastName.value.search(reg) > -1) {
-        document.querySelector('#lastNameErrorMsg').innerHTML = "Le nom ne doit pas contenir de chiffres";
+    if (lastName.value.search(reg1) > -1) {
+        document.querySelector('#lastNameErrorMsg').innerHTML = "nom invalide";
     }
     else {
         document.querySelector('#lastNameErrorMsg').innerHTML = "";
     };
 });
 
+//-----------------------  Validation de l'email -----------------------------------------------------------------------------------------------------------------------
+
 let email = document.getElementById('email');
 email.addEventListener('change', () => {
-    alert(email.value);
-    if (email.value.indexOf('@') == -1) {
-        document.getElementById('emailErrorMsg').innerHTML = "Veuillez renter un email correct";
-    }});
+    emailValidate(email.value);
+    });
 
-//--------------------------Fin du contrôle des inputs contact du Client---------------------------------
+function checkEmail(email) {
+    var reg2 = /@./;
+    return reg2.test(email);
+}
+function emailValidate(email) {
+    if (checkEmail(email)) {
+        document.getElementById('emailErrorMsg').textContent = "";
+    }
+    else {
+        document.getElementById('emailErrorMsg').textContent = "Adresse e-mail invalide !";
+    }
+}
+
+//------------------------  Fin de validation de l'email  -----------------------------------------------
+
+//--------------------------Fin du contrôle des inputs du formulaire de la page panier ---------------------------------
 
 //--------------------------Passation de commande --------------------------------------------------
 
@@ -241,7 +215,6 @@ order.addEventListener('click', (event)=>{
     for (let i = 0; i < object.length; i++) {
         console.log(object[i].id);
         productsId.push(object[i].id);
-        alert(productsId[i]);
     };
     console.log(productsId);
     send(productsId);
