@@ -1,6 +1,9 @@
+// ------------------------- Récupération de l'id du produit sélectionné à la page d'accueil -------------
 let str = location.href;
 var url = new URL(str);
 var productId = url.searchParams.get("id");
+
+// ------------------------- Affichage du produit avec ses nom, prix, description et les sélections de couleurs et de quantité-----------------------------------------------------
 
 function itemDisplay(){
     console.log(productId);
@@ -33,18 +36,29 @@ function itemDisplay(){
     
 itemDisplay();
 
-document.getElementById('addToCart').addEventListener('click', () => {
-    addToCart()});  
+
+// ----------- Ajouter le produit dans le window local storage sur appui du bouton 'ajouter au panier' -------------------
+
+document.getElementById('addToCart').addEventListener('click', () => {addToCart()});  
 
 function addToCart() {   
     productColor = getItemColor();
+    if (productColor == "") {
+        alert("Veuillez choisir une couleur");
+        productColor = getItemColor();
+    }
     productQuantity = getItemQuantity();
+    if (productQuantity == 0 || productQuantity > 100) {
+        alert("Veuillez choisir une quantité comprise entre 1 et 100");
+        productQuantity = getItemQuantity();
+    }
+
     let newItem = {
         id : productId,
         color : productColor,
         quantity : productQuantity};
 
-    if (productColor != "" && productQuantity != 0) {
+    if (productColor != "" && productQuantity > 0 && productQuantity <= 100) {
         if (localStorage.getItem('AllItems') == null) {
             var existingItems = [];}
         else {
@@ -67,18 +81,19 @@ function addToCart() {
             }
         }
         if (detect == false) {
-            existingItems.push(newItem);}
-    
+            existingItems.push(newItem);}    
     
         localStorage.setItem('AllItems', JSON.stringify(existingItems));
-    }        
+    }  
 }
 
+// ------------------------ récupération de la couleur sélectionnée --------------------------
 function getItemColor() {
     var selectColor = document.getElementById('colors');
     return selectColor.value;
 }
 
+// ------------------------- récupération de la quantité sélectionnée -------------------------
 function getItemQuantity() {
     var quantity = document.getElementById('quantity');
     return quantity.value;

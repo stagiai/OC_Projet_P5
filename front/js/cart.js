@@ -66,7 +66,12 @@ async function itemDisplay(id, color, quantity, section) {
     input.setAttribute('max', '100');
     input.setAttribute('value', quantity);
     div4.appendChild(input);
-    input.addEventListener('change',() =>{  // prise en compte des modifications de quantités à la page panier
+
+// -------------- prise en compte des modifications de quantités à la page panier ------------------------
+    input.addEventListener('change',() =>{
+        if (input.value > 100) {
+            input.value = 100;
+        }
         el = input.closest("article");
         console.log(el);
         let removeItemId = el.getAttribute('data-Id');
@@ -76,10 +81,14 @@ async function itemDisplay(id, color, quantity, section) {
         let itemsUpdate = JSON.parse(window.localStorage.getItem("AllItems"));;
         for (let i =0; i < itemsUpdate.length; i++) {
             if (itemsUpdate[i].id == removeItemId && itemsUpdate[i].color == removeItemColor) {
+    // 
                 itemsUpdate[i].quantity = input.value;
                 }
             }
-        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); // mise à jour du local storage, du nombre d'articles et du prix total
+    
+// ------------- mise à jour du local storage, du nombre d'articles et du prix total --------------------
+// ------------- après modification de la quantité d'un article -----------------------------------------
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); 
         console.log(itemsUpdate.length);
         console.log(itemsUpdate);
         cartTotalPriceAndQuantity();
@@ -91,7 +100,9 @@ async function itemDisplay(id, color, quantity, section) {
     p4.classList.add('deleteItem');
     p4.textContent = 'Supprimer';
     div6.appendChild(p4);
-    p4.addEventListener('click',() =>{  // prise en compte de la suppression des articles à la page panier
+
+// ------------- prise en compte de la suppression des articles à la page panier -----------------------
+    p4.addEventListener('click',() =>{  
         el = p4.closest("article");
         console.log(el);
         let removeItemId = el.getAttribute('data-Id');
@@ -105,7 +116,10 @@ async function itemDisplay(id, color, quantity, section) {
                 itemsUpdate.splice(i, 1);
                 }
             }
-        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); // mise à jour du local storage, du nombre d'articles et du prix total
+        
+// ------------- mise à jour du local storage, du nombre d'articles et du prix total ------------------
+// ------------- après suppression d'articles ---------------------------------------------------------        
+        localStorage.setItem('AllItems', JSON.stringify(itemsUpdate)); 
         console.log(itemsUpdate.length);
         console.log(itemsUpdate);
         cartTotalPriceAndQuantity();
@@ -156,7 +170,9 @@ async function cartTotalPriceAndQuantity () {
 
 
 
-//-----------------------Contrôle des inputs du formulaire de la page panier----------------------------------------
+//-----------------------Contrôle des inputs du formulaire de la page panier--------------
+
+//-----------------------Contrôle du prénom-----------------------------------------------
 
 const reg1 = /[0123456789&"'(_)=~#{[|\^@\]$*,;:!¤ù§/.?<>]/;
 let firstName = document.getElementById('firstName');
@@ -169,6 +185,8 @@ firstName.addEventListener('change', () => {
     };
 });
 
+//-----------------------Contrôle du nom-----------------------------------------------
+
 let lastName = document.getElementById('lastName');
 lastName.addEventListener('change', () => {
     if (lastName.value.search(reg1) > -1) {
@@ -179,7 +197,33 @@ lastName.addEventListener('change', () => {
     };
 });
 
-//-----------------------  Validation de l'email -----------------------------------------------------------------------------------------------------------------------
+//-----------------------Contrôle de l'adresse-----------------------------------------------
+
+const reg2 = /[&"(_)=~#{[|\^@\]$*,;:!¤ù§/.?<>]/;
+let address = document.getElementById('address');
+address.addEventListener('change', () => {
+    if (address.value.search(reg2) > -1) {
+        document.querySelector('#addressErrorMsg').innerHTML = "adresse invalide";
+    }
+    else {
+        document.querySelector('#addressErrorMsg').innerHTML = "";
+    };
+});
+
+//-----------------------Contrôle de la ville-----------------------------------------------
+
+const reg3 = /[0123456789&"(_)=~#{[|\^@\]$*,;:!¤ù§/.?<>]/;
+let city = document.getElementById('city');
+city.addEventListener('change', () => {
+    if (city.value.search(reg3) > -1) {
+        document.querySelector('#cityErrorMsg').innerHTML = "nom de ville invalide";
+    }
+    else {
+        document.querySelector('#cityErrorMsg').innerHTML = "";
+    };
+});
+
+//-----------------------  Contrôle de l'email -----------------------------------------------------------------------------------------------------------------------
 
 let email = document.getElementById('email');
 email.addEventListener('change', () => {
@@ -187,8 +231,8 @@ email.addEventListener('change', () => {
     });
 
 function checkEmail(email) {
-    var reg2 = /@./;
-    return reg2.test(email);
+    var reg4 = /^[\w.+-]{1,64}@[\w-]{2,252}\.[a-zA-Z][a-zA-Z\\.]{1,5}$/;
+    return reg4.test(email);
 }
 function emailValidate(email) {
     if (checkEmail(email)) {
@@ -199,11 +243,9 @@ function emailValidate(email) {
     }
 }
 
-//------------------------  Fin de validation de l'email  -----------------------------------------------
-
 //--------------------------Fin du contrôle des inputs du formulaire de la page panier ---------------------------------
 
-//--------------------------Passation de commande --------------------------------------------------
+//--------------------------Passation de commande et récupération de l'orderId --------------------------------------------------
 
 let order = document.getElementById('order');
 var productsId = [];
@@ -212,12 +254,18 @@ order.addEventListener('click', (event)=>{
     var object = JSON.parse(window.localStorage.getItem("AllItems"));
     console.log(object);
 
-    for (let i = 0; i < object.length; i++) {
-        console.log(object[i].id);
-        productsId.push(object[i].id);
-    };
-    console.log(productsId);
-    send(productsId);
+    if (object.length > 0) {
+        for (let i = 0; i < object.length; i++) {
+            console.log(object[i].id);
+            productsId.push(object[i].id);
+        };
+        console.log(productsId);
+        send(productsId);
+    }
+    else {
+        alert("Le panier est vide");
+    }
+
 });
 
 
